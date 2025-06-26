@@ -1,0 +1,13 @@
+thyroid_nodule_us_pred_2025:
+  gpu_node: 1
+  root_dir: outputs
+  raw_data_dir: input_text_files/
+  rel_mapping: src_utils/mapping/entp2rel.pkl
+  generate_bio: False
+  encoded_text: True
+  ner_model:
+    type: megatron
+    path: models/GatorTron_NER_model
+  rel_model:
+    type: megatron
+    path: models/GatorTron_Rel_Extraction_model/

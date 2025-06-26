@@ -1,0 +1,8 @@
+.ipynb_checkpoints/
+config.yml
+README.md
+input_text_files/
+outputs/
+models/
+__pycache__/
+models.zip
