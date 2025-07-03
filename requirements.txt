@@ -1,7 +1,8 @@
-torch
-transformers
+torch==1.13.1
+transformers==4.25.1
 tqdm
 numpy
 scikit-learn
 packaging
 ftfy
+pandas==2.2.2

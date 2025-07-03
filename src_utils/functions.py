@@ -1,18 +1,27 @@
 import pickle
-import sys
-sys.path.append("NLPreprocessing")
-sys.path.append("NLPreprocessing/text_process")
+from NLPreprocessing.annotation2BIO import read_annotation_brat
 
-from annotation2BIO import read_annotation_brat
+CONTEXT_WINDOW = 0
+CONTEXT_WINDOW = 100
 
+def rearrange_thyroid_df(thyroid_df):
+    thyroid_df_copy = thyroid_df.copy()
+    new_order = ['note_id', 'id', 'concept_cat','concept_value', 'size_numeric', 'size_qualitative', 'Size','size_numeric_dim_01', 'size_numeric_dim_02', 'size_numeric_dim_03',
+       'unit', 'shape', 'laterality', 'composition', 'echogenic_foci',  'vascularity', 'margins', 'TIRADS_Score','context_start', 'context_end', 'context', 'location', 'echogenicity',
+       'TIRADS_risk_category_processed', 'TIRADS_is_con', 'Risk_description', 'lymph', 'TIRADS_risk_category'
+       ]
+    # Ensure the columns are in the specified order
+    thyroid_df_copy = thyroid_df_copy[new_order]
 
+    return thyroid_df_copy
+
+    
 
 def read_note(file_path):
     with open(file_path, "r") as file:
         contents = file.read()
     return contents
 
-# FUCKED UP HERE: LYMPH and RISK
 def thyroid_row():
     return {k: "" for k in ['context_start','context_end', 'note_id','id', 'concept_cat', 'concept_value', 'size_numeric', 'shape', 'location_', 'laterality', 'composition', 'echogenic_foci', "size_qualitative",
                             'vascularity', 'margins', 'echogenicity_', 'TIRADS_Score', 'Risk_description', 'lymph','TIRADS_risk_category']}
@@ -27,7 +36,7 @@ def get_rel_prop_name(ner_concept_name):
         return ner_concept_name
     
 def load_mapping_file():
-    with open("mapping/entp2rel.pkl", "rb") as file:
+    with open("src_utils/mapping/entp2rel.pkl", "rb") as file:
         mapping_file = pickle.load(file)
     return mapping_file
         
@@ -44,14 +53,6 @@ def check_valid_thyroid_relationship(rel_concept_name):
         return False
 
 def summarize_thyroid_ann(ann_note, FILE_DIR = "input_text_files/"):
-#     if not file_path:
-#         file_path = BRAT_RE_DIR + str(ann_note) + ".ann"
-#         note_id = str(ann_note).split("/")[-1].split(".")[0]
-    
-#     if file_path:
-#         print(file_path)
-#         
-
     note_id = ann_note.stem.split("_")[0]
     note_text = read_note(FILE_DIR + str(note_id) + ".txt") 
     _, ners, rels = read_annotation_brat(ann_note)
@@ -70,7 +71,8 @@ def summarize_thyroid_ann(ann_note, FILE_DIR = "input_text_files/"):
             nodules_dicts["T" + str(idx)]["concept_value"] = ner[0]
             nodules_dicts["T" + str(idx)]["id"] = "T" + str(idx)
             nodules_dicts["T" + str(idx)]["context_start"] = ner[2][0]
-            nodules_dicts["T" + str(idx)]["context_end"] = ner[2][1]            
+            nodules_dicts["T" + str(idx)]["context_end"] = ner[2][1]
+            nodules_dicts["T" + str(idx)]["context"] = ""      
             nodule_set.add("T" + str(idx))
             
             
@@ -95,12 +97,24 @@ def summarize_thyroid_ann(ann_note, FILE_DIR = "input_text_files/"):
                 nodules_dicts[e1][prop_in_ners] =  nodules_dicts[e1][prop_in_ners] + ", " + ners[pos_in_ners][0]
             else:
                 nodules_dicts[e1][prop_in_ners] =  ners[pos_in_ners][0]
-            nodules_dicts[e1]["concept_start"] = min(nodules_dicts[e1]["context_start"], ners[pos_in_ners][2][0])
-            nodules_dicts[e1]["context_end"] = max(nodules_dicts[e1]["context_end"], ners[pos_in_ners][2][1])
+            
+            start = nodules_dicts[e1]["context_start"] = min(nodules_dicts[e1]["context_start"], ners[pos_in_ners][2][0])
+            end = nodules_dicts[e1]["context_end"] = max(nodules_dicts[e1]["context_end"], ners[pos_in_ners][2][1])
+            
+
+
             if not note_text:
                 note_text = read_note(note_id)
-            nodules_dicts[e1]["context"] = note_text[nodules_dicts[e1]["context_start"] : nodules_dicts[e1]["context_end"]]
-    
+            
+            print("note_id:", note_id, "id", "T" + str(idx))
+            print("context_start:", start, "context_end:", end)
+            print("context:", note_text[max(0, start - CONTEXT_WINDOW): min(len(note_text), end + CONTEXT_WINDOW)])
+            print("\n")
+
+
+            # Extract the context from the note text
+            nodules_dicts[e1]["context"] = note_text[max(0, start - CONTEXT_WINDOW): min(end + CONTEXT_WINDOW, len(note_text))]
+            
     ner_pos = 0
     while ner_pos < len(ners):
         if ners[ner_pos][1] == "thyroid_nodule":

@@ -14,6 +14,9 @@ This package contains a trained NLP transformer model for Clinical Named Entity 
     **IMPORTANT:** All subsequent commands should be run from within this directory.
 
 3.  **Create a Python virtual environment (optional):**
+```bash
+conda create -n thyroid_us python=3.11
+```
 
 4.  **Install dependencies:**
     ```bash
@@ -49,17 +52,5 @@ run.sh -c run_config.yml -e thyroid_nodule_us_pred_2025 -n 0
 ```     
       
 ### Step 3: Check the predictions
-
-If step 2 executes correctly, the output folder should create two folders `brat` and `brat_re`.
-
-
-**Input:** `.ann` files from `output/ann_files_NER_BIO/`
-**Output:** `test.tsv` in `output/brat_file/` (or whatever path you specify)
-
-```bash
-
-python generate_test_tsv.py \
-    --input_BIO_FORMATTED_dir output/ann_files_NER_BIO_formatted_output/ \
-    --mapping_file src_utils/mapping/all_comb.pkl \
-    --output_tsv_path output/brat_file/test.tsv
-```
+If step 2 executes correctly, the output folder would be populated with `thyroid_results_filtered.csv`
+To check the prediction open the above csv file.
