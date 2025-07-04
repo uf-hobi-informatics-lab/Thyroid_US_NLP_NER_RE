@@ -2,7 +2,9 @@ import pickle
 from NLPreprocessing.annotation2BIO import read_annotation_brat
 
 CONTEXT_WINDOW = 0
-CONTEXT_WINDOW = 100
+
+# Increase the context window size if needed
+# CONTEXT_WINDOW = 100
 
 def rearrange_thyroid_df(thyroid_df):
     thyroid_df_copy = thyroid_df.copy()
@@ -15,7 +17,15 @@ def rearrange_thyroid_df(thyroid_df):
 
     return thyroid_df_copy
 
-    
+def rearrange_lymph_df(thyroid_df):
+    thyroid_df_copy = thyroid_df.copy()
+    new_order = ['note_id', 'concept_cat','concept_value', 'Risk_description', 'context_start', 'context_end', 'context','echogenic_foci', 'margins', 'Peripheral vascularization',
+       'composition', 'echogenicity', 'hilium', 'laterality', 'Intranodal Necrosis', 'size_numeric',]
+       
+    # Ensure the columns are in the specified order
+    thyroid_df_copy = thyroid_df_copy[new_order]
+
+    return thyroid_df_copy   
 
 def read_note(file_path):
     with open(file_path, "r") as file:
@@ -101,8 +111,6 @@ def summarize_thyroid_ann(ann_note, FILE_DIR = "input_text_files/"):
             start = nodules_dicts[e1]["context_start"] = min(nodules_dicts[e1]["context_start"], ners[pos_in_ners][2][0])
             end = nodules_dicts[e1]["context_end"] = max(nodules_dicts[e1]["context_end"], ners[pos_in_ners][2][1])
             
-
-
             if not note_text:
                 note_text = read_note(note_id)
             
@@ -131,3 +139,34 @@ def summarize_thyroid_ann(ann_note, FILE_DIR = "input_text_files/"):
             ner_pos = j - 1
         ner_pos += 1            
     return list(nodules_dicts.values())
+
+
+def summarize_lymph_ann(ann_note, FILE_DIR = "input_text_files/"):
+    _, ners, rels = read_annotation_brat(ann_note)
+    lymph_dict = {}
+    
+    for idx, ner in enumerate(ners, start = 1):
+        if ner[1] == "lymph":
+            note_id = str(ann_note).split("/")[-1].split(".")[0]
+            lymph_dict["T" + str(idx)] = lymph_row()
+            lymph_dict["T" + str(idx)]["note_id"] = note_id
+            lymph_dict["T" + str(idx)]["concept_cat"] = ner[1]
+            lymph_dict["T" + str(idx)]["concept_value"] = ner[0]
+            lymph_dict["T" + str(idx)]["context_start"] = ner[2][0]
+            lymph_dict["T" + str(idx)]["context_end"] = ner[2][1]
+            lymph_dict["T" + str(idx)]["context"] = ""
+    
+    for idx, rel in enumerate(rels):
+        _,e1,e2 = rel
+        if e1 in lymph_dict:
+            pos_in_ners = int(e2[1:]) - 1
+            prop_in_ners = ners[pos_in_ners][1]
+            if lymph_dict[e1].get(prop_in_ners,0):
+                lymph_dict[e1][prop_in_ners] = lymph_dict[e1][prop_in_ners] + ", " + ners[pos_in_ners][0]
+            else:
+                lymph_dict[e1][prop_in_ners] = ners[pos_in_ners][0]
+            lymph_dict[e1]["context_start"] = min(lymph_dict[e1]["context_start"], ners[pos_in_ners][2][0])
+            lymph_dict[e1]["context_end"] = max(lymph_dict[e1]["context_end"], ners[pos_in_ners][2][1])
+            note_text = read_note(FILE_DIR + str(note_id) + ".txt")
+            lymph_dict[e1]["context"] = note_text[lymph_dict[e1]["context_start"] : lymph_dict[e1]["context_end"]]
+    return list(lymph_dict.values())
