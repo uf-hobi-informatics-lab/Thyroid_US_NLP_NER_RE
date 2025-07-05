@@ -79,9 +79,12 @@ def deal_location(input_df):
 # REVISE
 def remove_thyroid_nans(input_df):
     input_df_copy = input_df.copy(deep= True)
-    thyroid_columns = ["size_numeric", "shape", 'composition', 'echogenic_foci', 'vascularity', 'margins', 'size_qualitative']
+    all_thyroid_columns = ["size_numeric", "shape", 'composition', 'echogenic_foci', 'vascularity', 'margins', 'size_qualitative']
+    
+    existing_columns = input_df_copy.columns.intersection(all_thyroid_columns)
+
     mask_1 = ~input_df_copy["concept_value"].isna()
-    mask_2 = ~input_df_copy[thyroid_columns].isna().all(axis = 1)
+    mask_2 = ~input_df_copy[existing_columns].isna().all(axis = 1)
     
     clean_df = input_df_copy[(mask_1) & (mask_2)]
     
@@ -144,7 +147,7 @@ def add_TIRADS_is_con(input_df):
         try:
             score = int(score)
         except Exception as e:
-            print(category, score)
+            # print(category, score)
             if score == "seven": score = 7
             elif score == "six": score = 6
             elif score == "Three": score = 3
@@ -184,7 +187,6 @@ def clean_thyroid_RE(thyroid_df):
     thyroid_df_copy = remove_thyroid_nans(thyroid_df_copy)
     thyroid_df_copy = process_TIRADS(thyroid_df_copy)
     thyroid_df_copy = add_TIRADS_is_con(thyroid_df_copy)
-    print("TODO: MERGE LOCATION")
     return thyroid_df_copy
 
 
@@ -194,9 +196,10 @@ def remove_lymph_nans(input_df):
     
     input_df_copy = input_df.copy(deep= True)
     
-    lymph_columns = ['echogenicity_', 'Echogenic_hilium', 'size_numeric', 'shape', 'location_', 'size_qualitative', 'laterality', 'Risk_description']
+    all_lymph_columns = ['echogenicity_', 'Echogenic_hilium', 'size_numeric', 'shape', 'location_', 'size_qualitative', 'laterality', 'Risk_description']
+    existing_columns = input_df_copy.columns.intersection(all_lymph_columns)
     mask_1 = ~input_df_copy["concept_value"].isna()
-    mask_2 = ~input_df_copy[lymph_columns].isna().all(axis = 1)
+    mask_2 = ~input_df_copy[existing_columns].isna().all(axis = 1)
     
     clean_df = input_df_copy[(mask_1) & (mask_2)]
 
@@ -212,8 +215,6 @@ def clean_lymph_RE(lymph_df):
 
 
 # Handling size
-
-
 
 def measurement_dict():
     dataframe_dict = {
@@ -367,8 +368,6 @@ def get_part_2_no_units(no_units, to_review):
     # If no units and to_review are empty, return empty DataFrames
     if not no_units and not to_review:
         return pd.DataFrame(), pd.DataFrame()
-    else:
-        print("No units: ", len(no_units), "To review: ", len(to_review))
 
     no_units_df = pd.DataFrame(no_units)
     no_units_df["to_drop"] = True
@@ -391,9 +390,9 @@ def get_part_2_no_units(no_units, to_review):
 def handle_size_columns(thyroid_df):
     thyroid_df_copy = thyroid_df.copy(deep = True)
     temp_df = thyroid_df_copy[["size_numeric", "note_id", "id"]].reset_index(drop=True).reset_index().copy(deep = True)
-    print(temp_df.shape)
+    # print(temp_df.shape)
     temp_df = temp_df[temp_df["size_numeric"].notna()]
-    print(temp_df.shape)
+    # print(temp_df.shape)
     # Remove subcentimeters:
     subcentimeters_words = ['subcentimeter', 'Subcentimeter', 'subcentimeters', 'subcm', "less than a centimeter", "less than 1 cm",
                         'less than one centimeter', "less than, 1 cm", 'less than, one centimeter', "less"]
@@ -403,25 +402,25 @@ def handle_size_columns(thyroid_df):
     value_results, unit_results, note_id_results, index, thy_idx, to_review, no_units = identify_unit_dimensions(temp_df)
     
     exploded_df = get_exploded_df_part_1(value_results, unit_results, note_id_results, index, thy_idx)
-    print("Exploded df", exploded_df.shape)
+    # print("Exploded df", exploded_df.shape)
 
     # If exploded_df is not empty, proceed with merging
     if not exploded_df.empty:
         df_size = temp_df.merge(exploded_df, on=["note_id", "index", "id"], how = "left").copy(deep = True)
-        print(df_size.shape)
-        print(df_size.columns)
+        # print(df_size.shape)
+        # print(df_size.columns)
         
         to_review_solved_df, no_units_df = get_part_2_no_units(no_units, to_review)
 
         # If to_review_solved_df is not empty, proceed with merging
         if not to_review_solved_df.empty:
             df_size = df_size.merge(to_review_solved_df, on=["note_id", "index", "size_numeric_dim_01","size_numeric_dim_02", "size_numeric_dim_03", "unit","id"], how = "left")
-            print(df_size.shape)
+            # print(df_size.shape)
 
         # If no_units_df is not empty, proceed with merging
         if not no_units_df.empty:
             df_size = df_size.merge(no_units_df, on = ['index', 'size_numeric', 'note_id', 'id'], how = "left")
-            print(df_size.shape)
+            # print(df_size.shape)
     
 
         if "to_drop" not in df_size.columns:
@@ -430,7 +429,7 @@ def handle_size_columns(thyroid_df):
         thyroid_df_copy_final = thyroid_df_copy.merge(df_size[["note_id","id","size_numeric_dim_01","size_numeric_dim_02","size_numeric_dim_03","unit","to_drop"]], on = ["note_id","id"], how = "left")
 
         thyroid_df_copy_final = thyroid_df_copy_final[~thyroid_df_copy_final["size_numeric"].isin(subcentimeters_words)]
-        print(thyroid_df_copy_final.shape)
+        # print(thyroid_df_copy_final.shape)
         thyroid_df_copy_final = thyroid_df_copy_final.drop(thyroid_df_copy_final[thyroid_df_copy_final["to_drop"] == True].index)
         thyroid_df_copy_final.drop("to_drop", axis = 1, inplace = True)
         return thyroid_df_copy_final
@@ -442,6 +441,8 @@ def handle_size_columns(thyroid_df):
 
     
 def drop_below_measurement(measurement_in_cm, thyroid_df, lymph_df = None):
+
+    print(f"==== CUT OFF MEASUREMENT IN CM: {measurement_in_cm} ====")
     # Reject nodule where size of all the dimensions is less than the measurement_in_cm or accept if any dimension is greater than the measurement_in_cm
     measurement_in_mm = measurement_in_cm * 10
     thyroid_df_copy = thyroid_df.copy(deep=True)
@@ -451,7 +452,6 @@ def drop_below_measurement(measurement_in_cm, thyroid_df, lymph_df = None):
     mm_df = thyroid_df_copy[thyroid_df_copy["unit"] == "mm"]
     print("Notes with mm unit: ",mm_df.shape)
     cutoff = measurement_in_mm
-    print("cutoff in mm", cutoff)
     mm_df_filtered = mm_df[(mm_df["size_numeric_dim_01"] > cutoff) | (mm_df["size_numeric_dim_02"] > cutoff) | (mm_df["size_numeric_dim_03"] > cutoff)]
     print("Notes with size > {0} mm: ".format(measurement_in_mm) ,mm_df_filtered.shape)
     thyroid_df_copy.loc[mm_df_filtered.index, "to_drop"] = False
@@ -460,9 +460,8 @@ def drop_below_measurement(measurement_in_cm, thyroid_df, lymph_df = None):
     cm_df = thyroid_df_copy[thyroid_df_copy["unit"] == "cm"]
     print("Notes with cm unit: ",cm_df.shape)
     cutoff = measurement_in_cm
-    print("cutoff in cm", cutoff)
     cm_df_filtered = cm_df[(cm_df["size_numeric_dim_01"] > cutoff) | (cm_df["size_numeric_dim_02"] > cutoff) | (cm_df["size_numeric_dim_03"] > cutoff)]
-    print("Notes with size > 1 cm: ",cm_df_filtered.shape)
+    print("Notes with size > {0} cm: {1}".format(measurement_in_cm ,cm_df_filtered.shape))
     thyroid_df_copy.loc[cm_df_filtered.index, "to_drop"] = False
     
     
@@ -470,15 +469,10 @@ def drop_below_measurement(measurement_in_cm, thyroid_df, lymph_df = None):
     thyroid_df_copy = thyroid_df_copy.drop(thyroid_df_copy[thyroid_df_copy["to_drop"] == True].index)
 
     print("Final nodules: ", thyroid_df_copy.shape)
-    print("Unique notes: ", thyroid_df_copy["note_id"].nunique())
-    
-
-    print("Lymph notes before: ", lymph_df_copy.shape)
+    # print("Lymph notes before: ", lymph_df_copy.shape)
     note_ids = thyroid_df_copy["note_id"].unique()
     lymph_df_copy = lymph_df_copy[lymph_df_copy["note_id"].isin(note_ids)]
-    print("Lymph notes after: ", lymph_df_copy.shape)
-
-    
+    # print("Lymph notes after: ", lymph_df_copy.shape)
     thyroid_df_copy.drop("to_drop", axis = 1, inplace = True)
 
     return thyroid_df_copy, lymph_df_copy
@@ -491,8 +485,7 @@ def filtering_size(measurement_in_cm, thyroid_df, lymph_df, cleaned_already = Fa
     
     if not cleaned_already:
         thyroid_df_copy = clean_thyroid_RE(thyroid_df_copy)
-        print("UNCOMMENT THIS IF YOU WANT TO CLEAN LYMPH")
-        # lymph_df_copy = clean_lymph_RE(lymph_df_copy)
+        lymph_df_copy = clean_lymph_RE(lymph_df_copy)
     
     thyroid_df_size = handle_size_columns(thyroid_df_copy)
     thyroid_df_copy, lymph_df_copy = drop_below_measurement(measurement_in_cm, thyroid_df_size, lymph_df_copy)

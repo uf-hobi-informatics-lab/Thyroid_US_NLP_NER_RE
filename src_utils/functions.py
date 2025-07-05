@@ -114,10 +114,10 @@ def summarize_thyroid_ann(ann_note, FILE_DIR = "input_text_files/"):
             if not note_text:
                 note_text = read_note(note_id)
             
-            print("note_id:", note_id, "id", "T" + str(idx))
-            print("context_start:", start, "context_end:", end)
-            print("context:", note_text[max(0, start - CONTEXT_WINDOW): min(len(note_text), end + CONTEXT_WINDOW)])
-            print("\n")
+            # print("note_id:", note_id, "id", "T" + str(idx))
+            # print("context_start:", start, "context_end:", end)
+            # print("context:", note_text[max(0, start - CONTEXT_WINDOW): min(len(note_text), end + CONTEXT_WINDOW)])
+            # print("\n")
 
 
             # Extract the context from the note text
