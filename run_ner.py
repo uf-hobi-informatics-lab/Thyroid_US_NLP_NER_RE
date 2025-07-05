@@ -167,5 +167,10 @@ if __name__ == "__main__":
     with open(Path(args.config), 'r') as f:
         experiment_info = yaml.safe_load(f)[args.experiment]
     experiment_info['gpu_nodes'] = args.gpu_nodes
+
+
+    print("=============== Step 1: Run NER Prediction ===============\n")
     # Main function
     run(experiment_info)
+
+    print("=============== Step 1 Completed ===============")

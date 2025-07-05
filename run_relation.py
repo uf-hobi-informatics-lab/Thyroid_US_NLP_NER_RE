@@ -177,8 +177,9 @@ if __name__ == '__main__':
         
     
     os.environ["CUDA_VISIBLE_DEVICES"] = gpu_nodes
-    
     print(gpu_nodes)
+
+    print("=============== Step 2: Run RE Prediction ===============\n")
 
     path_root           = Path(experiment_info['root_dir'])
     path_encoded_text   = path_root / 'encoded_text'
@@ -298,3 +299,5 @@ if __name__ == '__main__':
     for stem in set([x.stem for x in path_brat.glob("*.ann")]) - set([x.stem for x in path_brat_re.glob("*.ann")]):
         
         shutil.copy(path_brat / (stem + '.ann'), path_brat_re / (stem + '.ann'))
+
+    print("=============== Step 2 Completed ===============")
