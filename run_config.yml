@@ -1,13 +1,17 @@
+# Add author information
+# Author: Aman Pathak
+# Date: 2025-07-05
+
+# Configuration for running the Thyroid Nodule US NLP NER and Relation Extraction tasks
 thyroid_nodule_us_pred_2025:
-  gpu_node: 1
-  root_dir: outputs
-  raw_data_dir: input_text_files/
-  rel_mapping: src_utils/mapping/entp2rel.pkl
-  generate_bio: False
-  encoded_text: True
-  ner_model:
+  gpu_node: 1 # ID of the GPU node to use
+  root_dir: outputs # Directory to save outputs
+  raw_data_dir: input_text_files/ # Directory containing raw text files
+  rel_mapping: src_utils/mapping/entp2rel.pkl # Path to relation mapping file
+  encoded_text: True # Whether to use encoded text files 
+  ner_model: # Path to NER model
     type: megatron
     path: models/GatorTron_NER_model
-  rel_model:
+  rel_model: # Path to relation extraction model
     type: megatron
     path: models/GatorTron_Rel_Extraction_model/
