@@ -48,33 +48,62 @@ This package provides a trained transformer model for analyzing thyroid ultrasou
 ## Project Structure:
 
 The project strcuture should look like:
+```plainfile
+├── ClinicalTransformerClassification
+├── ClinicalTransformerNER
+├── ClinicalTransformerRelationExtraction
+├── encode_text.py
+├── input_text_files
+├── models
+│   ├── GatorTron_NER_model
+│   └── GatorTron_Rel_Extraction_model
+├── NLPreprocessing
+├── outputs
+├── README.md
+├── requirements.txt
+├── run_config.yml
+├── run_ner.py
+├── run_post_processing.py
+├── run_relation.py
+├── run.sh
+└── src_utils
+    ├── aggregate_entities.py
+    ├── convert_tsv.py
+    ├── functions.py
+    ├── __init__.py
+    ├── mapping
+    └── rule_based_system.py
+```
+
 
 
 ## Usage
 Once you are in the `Thyroid_US_NLP_NER_RE` directory and your environment is set up, follow these steps:
 
 ### Step 1: Prepare Your Data 
-Place your text files in the `input_text_files` folder (or specify a different folder in the config). 
+Replace your text files in the `input_text_files` folder (or specify a different folder in the config). 
 
 ### Step 2: Configure Settings 
 
 Edit `run_config.yml`: 
 
-    **raw_data_dir**: Path to your input text files (default: `input_text_files`)
-    **root_dir**: Where outputs will be saved (default: `output`)
+    raw_data_dir: Confirm your path to your input text files (default: `input_text_files`)
+    root_dir: confirm your path to where theoutputs will be saved (default: `output`)
      
-### Step 2: Execute the run.sh file:
+### Step 3: Execute the run.sh file:
 
 This execute the pipeline running both the NER and RE pipelines.
 Command line argument includes:
 1. -c: the path to the config file (Currently it uses run_config.yml)
 2. -e: name of the experiment (Currently set to `thyroid_nodule_us_pred_2025`)
 3. -n: which gpu node to use. (Currently set to 0)
-4. -size: specify the filtering size of the nodule in cm. If size is 0, it will not filter. If size is mentioned, it will filter the nodule whose dimension (any) is greater than or equal to the size. (currently set to 1)
+4. -s: specify the filtering size of the nodule in cm. If size is 0, it will not filter. If size is mentioned, it will filter the nodule whose dimension (any) is greater than or equal to the size. (currently set to 1)
 
 ```bash
-run.sh -c run_config.yml -e thyroid_nodule_us_pred_2025 -n 0 -size 1
-```     
+run.sh -c run_config.yml -e thyroid_nodule_us_pred_2025 -n 0 -s 1
+```
+
+The above run will use the run_config.yml and extract experiment details within it. Processing will be done on GPU Node 0 and the thyroid nodules will be filtered for $\ge$ 1cm
 
 ### Step 4: View Results 
 
