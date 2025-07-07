@@ -1,5 +1,6 @@
 # Thyroid_US_NLP_NER_RE - NLP Model Package
 
+
 This package provides a trained transformer model for analyzing thyroid ultrasound reports. It performs two key tasks:
 - **Named Entity Recognition (NER)**: Identifies medical entities in text
 - **Relation Extraction (RE)**: Finds relationships between identified entities
@@ -25,8 +26,11 @@ This package provides a trained transformer model for analyzing thyroid ultrasou
     **IMPORTANT:** All subsequent commands should be run from within this directory.
 
 3.  **Create a Python virtual environment (optional):**
+   
+    *Using conda:*
+
     ```bash
-    conda create -n thyroid_us python=3.9.12
+    conda create -n thyroid_us python=3.9.12 -y
     conda activate thyroid_us
     ```
 
@@ -41,13 +45,15 @@ This package provides a trained transformer model for analyzing thyroid ultrasou
     ```
 
 6. **Download the models:**
-
-    Visit the dropbox folder: https://www.dropbox.com/scl/fo/o6a644wd3m61kdynvq0uv/AGp5T_sDCh0RSjKyx-sd1EY?rlkey=ry5voqckzu9woy3kmeqbn1bg8&st=50jsvgom&dl=0 and download the zipped folder. 
-    Extract it and copy it in the ROOT_DIR.
+    The trained models are required to run the pipeline.
+    1. Download the model archive from this [Dropbox link](https://www.dropbox.com/scl/fo/o6a644wd3m61kdynvq0uv/AGp5T_sDCh0RSjKyx-sd1EY?rlkey=ry5voqckzu9woy3kmeqbn1bg8&st=50jsvgom&dl=0).
+    2. Unzip the downloaded folder.
+    3. You should now have a directory named `models`. Place this entire `models` directory inside the project root (`Thyroid_US_NLP_NER_RE/`).
 
 ## Project Structure:
 
 The project strcuture should look like:
+
 ```plainfile
 ├── ClinicalTransformerClassification
 ├── ClinicalTransformerNER
@@ -76,53 +82,73 @@ The project strcuture should look like:
 ```
 
 
-
 ## Usage
 Once you are in the `Thyroid_US_NLP_NER_RE` directory and your environment is set up, follow these steps:
 
-### Step 1: Prepare Your Data 
-Replace your text files in the `input_text_files` folder (or specify a different folder in the config). 
+**Step 1: Prepare Input Data**
+
+Place your raw ultrasound reports as plain text files (`.txt`) inside the `input_text_files` directory. You can use a different directory by specifying it in the configuration file. Ideally the name of the files should be note_id
 
 ### Step 2: Configure Settings 
 
 Edit `run_config.yml`: 
 
-    raw_data_dir: Confirm your path to your input text files (default: `input_text_files`)
-    root_dir: confirm your path to where theoutputs will be saved (default: `output`)
+- raw_data_dir: Confirm your path to your input text files (default: `input_text_files`)
+- root_dir: confirm your path to where theoutputs will be saved (default: `output`)
      
 ### Step 3: Execute the run.sh file:
 
 This execute the pipeline running both the NER and RE pipelines.
 Command line argument includes:
-1. -c: the path to the config file (Currently it uses run_config.yml)
-2. -e: name of the experiment (Currently set to `thyroid_nodule_us_pred_2025`)
-3. -n: which gpu node to use. (Currently set to 0)
-4. -s: specify the filtering size of the nodule in cm. If size is 0, it will not filter. If size is mentioned, it will filter the nodule whose dimension (any) is greater than or equal to the size. (currently set to 1)
+1. -c: The path to the config file (default: run_config.yml)
+2. -e: The name of the experiment (default: `thyroid_nodule_us_pred_2025`)
+3. -n: The GPU device ID to use. (default: 0)
+4. -s: Minimum size (cm) for nodule filtering. Nodules with any dimension greater than or equal to this value will be kept. Set to 0 to disable filtering (default: 1)
 
 ```bash
-run.sh -c run_config.yml -e thyroid_nodule_us_pred_2025 -n 0 -s 1
+bash run.sh -c run_config.yml -e thyroid_nodule_us_pred_2025 -n 0 -s 1
 ```
 
-The above run will use the run_config.yml and extract experiment details within it. Processing will be done on GPU Node 0 and the thyroid nodules will be filtered for $\ge$ 1cm
+This command runs the pipeline on GPU `0` and filters for nodules ≥ `1cm`.
 
 ### Step 4: View Results 
 
-Check the output folder for: 
+The processed output files will be generated in the `outputs` directory (or your specified `root_dir`). The primary results include:
 
-    thyroid_results_filtered.csv - Thyroid predictions
-    lymph_results_filtered.csv - Lymph node predictions
+- `thyroid_results_filtered.csv`: Structured extracted data for thyroid nodules.
+- `lymph_results_filtered.csv`: Structured extracted data for lymph nodes.
      
 
 ## Troubleshooting 
 
-###### Q: The script fails with "CUDA out of memory"
+###### Q: The script fails with "CUDA out of memory"?
 A: Try using a different GPU (-n 1, -n 2, etc.) or process fewer files at once. 
 
-###### Q: Models not found error
+###### Q: Models not found error?
 A: Ensure you've downloaded and extracted the models to the correct directory. 
 
-###### Q: Permission denied when running run.sh
+###### Q: Permission denied when running run.sh?
 A: Make the script executable: chmod +x run.sh 
 
-###### Q: Dependencies installation fails
+###### Q: Dependencies installation fails?
 A: Ensure you're using Python 3.9.12 and have activated your virtual environment. 
+
+## Contact:
+Please contact us or post an issue if you have any questions.
+    
+    Aman Pathak (aman.pathak@ufl.edu)
+    Yonghui Wu (yonghui.wu@ufl.edu)
+
+## Related Projects
+
+This work builds upon the following frameworks:  
+
+[ClinicalTransformerNER](https://github.com/uf-hobi-informatics-lab/ClinicalTransformerNER)  
+[ClinicalTransformerRelationExtraction](https://github.com/uf-hobi-informatics-lab/ClinicalTransformerRelationExtraction)  
+[ClinicalTransformerClassification](https://github.com/uf-hobi-informatics-lab/ClinicalTransformerClassification.git)
+
+## Citation:
+If you use this work, please cite our paper:
+
+Pathak, A., Yu, Z., Paredes, D., Monsour, E. P., Rocha, A. O., Brito, J. P., Ospina, N. S., & Wu, Y. (2024). Extracting Thyroid Nodules Characteristics from Ultrasound Reports Using Transformer-based Natural Language Processing Methods. AMIA ... Annual Symposium proceedings. AMIA Symposium, 2023, 1193–1200.
+https://pmc.ncbi.nlm.nih.gov/articles/PMC10785862/
